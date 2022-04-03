@@ -1,0 +1,13 @@
+// Stripe
+
+Customer
+Subscription
+
+// Aplicação
+
+Inscrição
+
+Observar eventos e enviar
+Webhooks
+
+http://localhost:3000/api/stripe/webhooks
