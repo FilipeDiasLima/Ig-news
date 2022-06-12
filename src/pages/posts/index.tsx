@@ -3,8 +3,20 @@ import Head from 'next/head'
 import styles from './styles.module.scss'
 import Prismic from '@prismicio/client'
 import { getPrismicClient } from '../../server/prismic'
+import { RichText } from 'prismic-dom'
 
-export default function Posts() {
+type Post = {
+  slug: string,
+  title: string,
+  excerpt: string
+  updatedAt: string
+}
+
+interface PostProps {
+  posts: Post[]
+}
+
+export default function Posts({ posts }: PostProps) {
   return (
     <>
       <Head>
@@ -13,21 +25,13 @@ export default function Posts() {
 
       <main className={styles.container}>
         <div className={styles.posts}>
-          <a>
-            <time>12 de março de 2021</time>
-            <strong>Creating a Monorepo dweifoe mvcpeom eedcvedved</strong>
-            <p>ferwimnfcvoeirnvoienfdvo edfvopi jefdpov iedfpvo jepdfovj cepdfo vpdf </p>
-          </a>
-          <a>
-            <time>12 de março de 2021</time>
-            <strong>Creating a Monorepo dweifoe mvcpeom eedcvedved</strong>
-            <p>ferwimnfcvoeirnvoienfdvo edfvopi jefdpov iedfpvo jepdfovj cepdfo vpdf </p>
-          </a>
-          <a>
-            <time>12 de março de 2021</time>
-            <strong>Creating a Monorepo dweifoe mvcpeom eedcvedved</strong>
-            <p>ferwimnfcvoeirnvoienfdvo edfvopi jefdpov iedfpvo jepdfovj cepdfo vpdf </p>
-          </a>
+          {posts.map(post => (
+            <a key={post.slug} href='#'>
+              <time>{post.updatedAt}</time>
+              <strong>{post.title}</strong>
+              <p>{post.excerpt}</p>
+            </a>
+          ))}
         </div>
       </main>
     </>
@@ -37,7 +41,7 @@ export default function Posts() {
 export const getStaticProps: GetStaticProps = async () => {
   const prismic = getPrismicClient()
 
-  const response = await prismic.query([
+  const response = await prismic.query<any>([
     Prismic.predicates.at('document.type', 'post')
   ], {
     fetch: ['post.title', 'post.content'],
@@ -46,7 +50,22 @@ export const getStaticProps: GetStaticProps = async () => {
 
   // console.log(JSON.stringify(response, null, 2))
 
+  const posts = response.results.map(post => {
+    return {
+      slug: post.uid,
+      title: post.data.title,
+      excerpt: post.data.content.find(content => content.type = 'paragraph')?.text ?? '',
+      updatedAt: new Date(post.last_publication_date).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      })
+    }
+  })
+
   return {
-    props: {}
+    props: {
+      posts
+    }
   }
 }
